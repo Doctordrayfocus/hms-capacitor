@@ -5,8 +5,6 @@ import android.app.Application;
 
 import androidx.annotation.NonNull;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
@@ -16,6 +14,7 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
+import com.google.gson.Gson;
 
 import live.hms.video.audio.HMSAudioManager;
 import live.hms.video.error.HMSException;
@@ -36,8 +35,6 @@ import live.hms.video.sdk.models.enums.HMSPeerUpdate;
 import live.hms.video.sdk.models.enums.HMSRoomUpdate;
 import live.hms.video.sdk.models.enums.HMSTrackUpdate;
 import live.hms.video.sdk.models.trackchangerequest.HMSChangeTrackStateRequest;
-
-
 
 @CapacitorPlugin(name = "HmsCapacitor",  permissions = {
         @Permission(
@@ -68,41 +65,22 @@ public class HmsCapacitorPlugin extends Plugin {
     class MyHmsUpdateListener implements HMSUpdateListener {
 
         @Override public void onJoin(@NonNull HMSRoom hmsRoom) {
-            ObjectMapper mapper = new ObjectMapper();
-
             JSObject eventData = new JSObject();
-            try {
-                eventData.put("room", mapper.writeValueAsString(hmsRoom));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+            Gson gson = new Gson();
+            eventData.put("room", gson.toJson(hmsRoom));
             notifyListeners("onJoin", eventData);
         }
         @Override public void onMessageReceived(@NonNull HMSMessage hmsMessage) {
-            ObjectMapper mapper = new ObjectMapper();
-
             JSObject eventData = new JSObject();
-            try {
-                eventData.put("message", mapper.writeValueAsString(hmsMessage));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+            Gson gson = new Gson();
+            eventData.put("message", gson.toJson(hmsMessage));
             notifyListeners("onMessageReceived", eventData);
         }
         @Override public void onPeerUpdate(@NonNull HMSPeerUpdate hmsPeerUpdate, @NonNull HMSPeer hmsPeer) {
-            ObjectMapper mapper = new ObjectMapper();
-
             JSObject eventData = new JSObject();
-            try {
-                eventData.put("hmsPeerUpdate", mapper.writeValueAsString(hmsPeerUpdate));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                eventData.put("hmsPeer", mapper.writeValueAsString(hmsPeer));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+            Gson gson = new Gson();
+            eventData.put("hmsPeerUpdate", gson.toJson(hmsPeerUpdate));
+            eventData.put("hmsPeer", gson.toJson(hmsPeer));
             notifyListeners("onPeerUpdate", eventData);
         }
         @Override public void onReconnected() {
@@ -116,21 +94,15 @@ public class HmsCapacitorPlugin extends Plugin {
             notifyListeners("onReconnecting", eventData);
         }
         @Override public void onRoleChangeRequest(@NonNull HMSRoleChangeRequest hmsRoleChangeRequest) {
-            ObjectMapper mapper = new ObjectMapper();
-
             JSObject eventData = new JSObject();
-            try {
-                eventData.put("peer", mapper.writeValueAsString(hmsRoleChangeRequest.getRequestedBy()));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+            Gson gson = new Gson();
+            eventData.put("peer", gson.toJson(hmsRoleChangeRequest.getRequestedBy()));
             notifyListeners("onRoleChange", eventData);
         }
         @Override public void onRoomUpdate(@NonNull HMSRoomUpdate hmsRoomUpdate, @NonNull HMSRoom hmsRoom) {}
         @Override public void onTrackUpdate(@NonNull HMSTrackUpdate hmsTrackUpdate, @NonNull HMSTrack hmsTrack, @NonNull HMSPeer hmsPeer) {
-            ObjectMapper mapper = new ObjectMapper();
-
             JSObject eventData = new JSObject();
+            Gson gson = new Gson();
             if(hmsTrackUpdate == HMSTrackUpdate.TRACK_ADDED) {
                 eventData.put("hmsTrackUpdate", HMSTrackUpdate.TRACK_ADDED);
             } else if (hmsTrackUpdate == HMSTrackUpdate.TRACK_REMOVED) {
@@ -144,27 +116,14 @@ public class HmsCapacitorPlugin extends Plugin {
             } else if (hmsTrackUpdate == HMSTrackUpdate.TRACK_UNMUTED) {
                 eventData.put("hmsTrackUpdate", HMSTrackUpdate.TRACK_UNMUTED);
             }
-            try {
-                eventData.put("hmsTrack", mapper.writeValueAsString(hmsTrack));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                eventData.put("hmsPeer", mapper.writeValueAsString(hmsPeer));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+            eventData.put("hmsTrack", gson.toJson(hmsTrack));
+            eventData.put("hmsPeer", gson.toJson(hmsPeer));
             notifyListeners("onTrackUpdate", eventData);
         }
         @Override public void onError(@NonNull HMSException e) {
-            ObjectMapper mapper = new ObjectMapper();
-
             JSObject eventData = new JSObject();
-            try {
-                eventData.put("error", mapper.writeValueAsString(e));
-            } catch (JsonProcessingException ex) {
-                throw new RuntimeException(ex);
-            }
+            Gson gson = new Gson();
+            eventData.put("error", gson.toJson(e));
             notifyListeners("onError", eventData);
         }
 
