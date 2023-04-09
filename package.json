@@ -74,5 +74,8 @@
     "android": {
       "src": "android"
     }
+  },
+  "dependencies": {
+    "@100mslive/hms-video-store": "^0.10.0"
   }
 }

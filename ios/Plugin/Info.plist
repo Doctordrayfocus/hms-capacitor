@@ -20,5 +20,11 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
+	<key>NSCameraUsageDescription</key>
+	<string>Please allow access to Camera to enable live conferencing.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Please allow access to network usage to enable live conferencing.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Please allow access to Microphone to enable live conferencing.</string>
 </dict>
 </plist>

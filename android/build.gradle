@@ -54,4 +54,8 @@ dependencies {
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+
+    // 100ms
+    def hmsVersion = "2.6.0"
+    implementation "live.100ms:android-sdk:$hmsVersion" 
 }
