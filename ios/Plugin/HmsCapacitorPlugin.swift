@@ -117,9 +117,57 @@ public class HmsCapacitorPlugin: CAPPlugin {
 }
 
 extension HmsCapacitorPlugin: HMSUpdateListener {
+    
+    private func peerInterface(peer: HMSPeer) -> [String : Any] {
+        let data = [
+            "id": peer.peerID,
+            "name": peer.name,
+            "roleName": peer.role?.name ?? "",
+            "isLocal": peer.isLocal,
+            "isStarred": false,
+            "auxiliaryTracks": peer.auxiliaryTracks ?? [],
+            "customerUserId": peer.customerUserID ?? "",
+            "metadata": peer.metadata ?? "",
+            "joinedAt": peer.joinedAt
+        ] as [String : Any]
+        
+        return data;
+    }
+    
+    private func messageInterface(message: HMSMessage) -> [String : Any] {
+        let data = [
+            "id": message.time,
+            "sender": message.sender?.peerID ?? "",
+            "senderName": message.sender?.name ?? "",
+            "senderUserId": message.sender?.customerUserID ?? "",
+            "senderRole": message.sender?.role?.name ?? "",
+            "recipientPeer": message.recipient.peerRecipient?.peerID ?? "",
+            "time": message.time,
+            "read": false,
+            "type": message.type,
+            "message": message.message,
+            "ignored": false
+        ] as [String : Any]
+        
+        return data;
+    }
+
+    
     public func on(join room: HMSRoom) {
+        let roomData = [
+            "id": room.roomID ?? "",
+            "name": room.name ?? "",
+            "isConnected": true,
+            "peers": room.peers,
+            "localPeer": room.peers[0],
+            "roomState": room.rtmpStreamingState,
+            "sessionId": room.sessionID ?? "",
+            "startedAt": room.sessionStartedAt ?? "",
+            "joinedAt": room.peers[0].joinedAt,
+            "peerCount": room.peerCount ?? 0
+        ] as [String : Any]
         self.notifyListeners("onJoin", data: [
-            "room" : room
+            "room" : roomData
         ])
     }
     
@@ -130,7 +178,7 @@ extension HmsCapacitorPlugin: HMSUpdateListener {
     public func on(peer: HMSPeer, update: HMSPeerUpdate) {
         self.notifyListeners("onPeerUpdate", data: [
             "hmsPeerUpdate": update,
-            "hmsPeer": peer
+            "hmsPeer": peerInterface(peer: peer)
         ])
     }
     
@@ -138,7 +186,7 @@ extension HmsCapacitorPlugin: HMSUpdateListener {
         self.notifyListeners("onTrackUpdate", data: [
             "hmsTrackUpdate": update,
             "hmsTrack": track,
-            "hmsPeer": peer
+            "hmsPeer": peerInterface(peer: peer)
         ])
     }
     
@@ -150,13 +198,13 @@ extension HmsCapacitorPlugin: HMSUpdateListener {
     
     public func on(message: HMSMessage) {
         self.notifyListeners("onMessageReceived", data: [
-            "message": message
+            "message": messageInterface(message: message)
         ])
     }
     
     public func on(updated speakers: [HMSSpeaker]) {
         self.notifyListeners("listenForDominantSpeaker", data: [
-            "peer": speakers[0].peer
+            "peer": peerInterface(peer: speakers[0].peer)
         ])
     }
     
