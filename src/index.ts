@@ -10,6 +10,10 @@ const HmsCapacitor = registerPlugin<HmsCapacitorPlugin>('HmsCapacitor', {
 
 const HmsEventsCallbacks: EventCallbacks = {};
 
+HmsEventsCallbacks.onJoin = () => {
+  console.log('I just joined');
+};
+
 HmsCapacitor.addListener('listenForDominantSpeaker', (eventData: any) => {
   if (HmsEventsCallbacks?.listenForDominantSpeaker) {
     HmsEventsCallbacks?.listenForDominantSpeaker(eventData.peer);

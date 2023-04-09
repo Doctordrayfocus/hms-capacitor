@@ -5,6 +5,8 @@ import android.app.Application;
 
 import androidx.annotation.NonNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
@@ -35,6 +37,8 @@ import live.hms.video.sdk.models.enums.HMSRoomUpdate;
 import live.hms.video.sdk.models.enums.HMSTrackUpdate;
 import live.hms.video.sdk.models.trackchangerequest.HMSChangeTrackStateRequest;
 
+
+
 @CapacitorPlugin(name = "HmsCapacitor",  permissions = {
         @Permission(
                 alias = "camera",
@@ -64,19 +68,41 @@ public class HmsCapacitorPlugin extends Plugin {
     class MyHmsUpdateListener implements HMSUpdateListener {
 
         @Override public void onJoin(@NonNull HMSRoom hmsRoom) {
+            ObjectMapper mapper = new ObjectMapper();
+
             JSObject eventData = new JSObject();
-            eventData.put("room", hmsRoom);
+            try {
+                eventData.put("room", mapper.writeValueAsString(hmsRoom));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
             notifyListeners("onJoin", eventData);
         }
         @Override public void onMessageReceived(@NonNull HMSMessage hmsMessage) {
+            ObjectMapper mapper = new ObjectMapper();
+
             JSObject eventData = new JSObject();
-            eventData.put("message", hmsMessage);
+            try {
+                eventData.put("message", mapper.writeValueAsString(hmsMessage));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
             notifyListeners("onMessageReceived", eventData);
         }
         @Override public void onPeerUpdate(@NonNull HMSPeerUpdate hmsPeerUpdate, @NonNull HMSPeer hmsPeer) {
+            ObjectMapper mapper = new ObjectMapper();
+
             JSObject eventData = new JSObject();
-            eventData.put("hmsPeerUpdate", hmsPeerUpdate);
-            eventData.put("hmsPeer", hmsPeer);
+            try {
+                eventData.put("hmsPeerUpdate", mapper.writeValueAsString(hmsPeerUpdate));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                eventData.put("hmsPeer", mapper.writeValueAsString(hmsPeer));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
             notifyListeners("onPeerUpdate", eventData);
         }
         @Override public void onReconnected() {
@@ -90,12 +116,20 @@ public class HmsCapacitorPlugin extends Plugin {
             notifyListeners("onReconnecting", eventData);
         }
         @Override public void onRoleChangeRequest(@NonNull HMSRoleChangeRequest hmsRoleChangeRequest) {
+            ObjectMapper mapper = new ObjectMapper();
+
             JSObject eventData = new JSObject();
-            eventData.put("peer", hmsRoleChangeRequest.getRequestedBy());
+            try {
+                eventData.put("peer", mapper.writeValueAsString(hmsRoleChangeRequest.getRequestedBy()));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
             notifyListeners("onRoleChange", eventData);
         }
         @Override public void onRoomUpdate(@NonNull HMSRoomUpdate hmsRoomUpdate, @NonNull HMSRoom hmsRoom) {}
         @Override public void onTrackUpdate(@NonNull HMSTrackUpdate hmsTrackUpdate, @NonNull HMSTrack hmsTrack, @NonNull HMSPeer hmsPeer) {
+            ObjectMapper mapper = new ObjectMapper();
+
             JSObject eventData = new JSObject();
             if(hmsTrackUpdate == HMSTrackUpdate.TRACK_ADDED) {
                 eventData.put("hmsTrackUpdate", HMSTrackUpdate.TRACK_ADDED);
@@ -110,13 +144,27 @@ public class HmsCapacitorPlugin extends Plugin {
             } else if (hmsTrackUpdate == HMSTrackUpdate.TRACK_UNMUTED) {
                 eventData.put("hmsTrackUpdate", HMSTrackUpdate.TRACK_UNMUTED);
             }
-            eventData.put("hmsTrack", hmsTrack);
-            eventData.put("hmsPeer", hmsPeer);
+            try {
+                eventData.put("hmsTrack", mapper.writeValueAsString(hmsTrack));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                eventData.put("hmsPeer", mapper.writeValueAsString(hmsPeer));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
             notifyListeners("onTrackUpdate", eventData);
         }
         @Override public void onError(@NonNull HMSException e) {
+            ObjectMapper mapper = new ObjectMapper();
+
             JSObject eventData = new JSObject();
-            eventData.put("error", e);
+            try {
+                eventData.put("error", mapper.writeValueAsString(e));
+            } catch (JsonProcessingException ex) {
+                throw new RuntimeException(ex);
+            }
             notifyListeners("onError", eventData);
         }
 
@@ -134,8 +182,7 @@ public class HmsCapacitorPlugin extends Plugin {
 
     @PluginMethod()
     public void initialize(PluginCall call) {
-        Application application =  new Application();
-        this.hmssdk = new HMSSDK.Builder(application).build();
+        this.hmssdk = new HMSSDK.Builder(this.getContext()).build();
         call.resolve();
     }
 
