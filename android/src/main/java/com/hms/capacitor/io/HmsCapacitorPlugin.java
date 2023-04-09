@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 import com.getcapacitor.Bridge;
 import com.getcapacitor.JSObject;
+import com.getcapacitor.Logger;
 import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -62,25 +63,92 @@ public class HmsCapacitorPlugin extends Plugin {
         call.resolve(ret);
     }
 
+
     class MyHmsUpdateListener implements HMSUpdateListener {
+
+        private JSObject RoomInterface (HMSRoom hmsRoom) {
+            JSObject data = new JSObject();
+
+            data.put("id", hmsRoom.getRoomId());
+            data.put("name", hmsRoom.getName());
+            data.put("isConnected", true);
+            data.put("peers", hmsRoom.getPeerList().toArray());
+            data.put("localPeer", hmsRoom.getLocalPeer().getPeerID());
+            data.put("roomState", hmsRoom.getRtmpHMSRtmpStreamingState());
+            data.put("sessionId", hmsRoom.getSessionId());
+            data.put("startedAt", hmsRoom.getStartedAt());
+            data.put("joinedAt", hmsRoom.getLocalPeer().getJoinedAt());
+            data.put("peerCount", hmsRoom.getPeerCount());
+
+            return data;
+        }
+
+        private JSObject MessageInterface (HMSMessage hmsMessage) {
+            JSObject data = new JSObject();
+
+            data.put("id", hmsMessage.getServerReceiveTime());
+            data.put("sender", hmsMessage.getSender().getPeerID());
+            data.put("senderName", hmsMessage.getSender().getName());
+            data.put("senderUserId", hmsMessage.getSender().getCustomerUserID());
+            data.put("senderRole", hmsMessage.getSender().getHmsRole().getName());
+            data.put("recipientPeer", hmsMessage.getRecipient().getRecipientPeer().getPeerID());
+            data.put("time", hmsMessage.getServerReceiveTime());
+            data.put("read", false);
+            data.put("type", hmsMessage.getType());
+            data.put("message", hmsMessage.getMessage());
+            data.put("ignored", false);
+
+            return data;
+        }
+
+        private JSObject PeerInterface (HMSPeer hmsPeer) {
+            JSObject data = new JSObject();
+
+            data.put("id", hmsPeer.getPeerID());
+            data.put("name", hmsPeer.getName());
+            data.put("roleName", hmsPeer.getHmsRole().getName());
+            data.put("isLocal", hmsPeer.isLocal());
+            data.put("isStarred", false);
+//            data.put("videoTrack", hmsPeer.getVideoTrack().getTrackId());
+//            data.put("audioTrack", hmsPeer.getAudioTrack().getTrackId());
+            data.put("auxiliaryTracks", hmsPeer.getAuxiliaryTracks());
+            data.put("customerUserId", hmsPeer.getCustomerUserID());
+            data.put("metadata", hmsPeer.getMetadata());
+            data.put("joinedAt", hmsPeer.getJoinedAt());
+
+            return data;
+        }
+
+        private JSObject ErrorInterface (HMSException e) {
+            JSObject data = new JSObject();
+
+            data.put("code", e.getCode());
+            data.put("action", e.getAction());
+            data.put("name", e.getName());
+            data.put("message", e.getMessage());
+            data.put("description", e.getDescription());
+            data.put("isTerminal", e.isTerminal());
+
+            return data;
+        }
+
 
         @Override public void onJoin(@NonNull HMSRoom hmsRoom) {
             JSObject eventData = new JSObject();
-            Gson gson = new Gson();
-            eventData.put("room", gson.toJson(hmsRoom));
+            eventData.put("room", this.RoomInterface(hmsRoom));
             notifyListeners("onJoin", eventData);
         }
         @Override public void onMessageReceived(@NonNull HMSMessage hmsMessage) {
             JSObject eventData = new JSObject();
-            Gson gson = new Gson();
-            eventData.put("message", gson.toJson(hmsMessage));
+            eventData.put("message", this.MessageInterface(hmsMessage));
             notifyListeners("onMessageReceived", eventData);
         }
         @Override public void onPeerUpdate(@NonNull HMSPeerUpdate hmsPeerUpdate, @NonNull HMSPeer hmsPeer) {
             JSObject eventData = new JSObject();
-            Gson gson = new Gson();
-            eventData.put("hmsPeerUpdate", gson.toJson(hmsPeerUpdate));
-            eventData.put("hmsPeer", gson.toJson(hmsPeer));
+
+            eventData.put("hmsPeerUpdate", hmsPeerUpdate);
+            eventData.put("hmsPeer",  this.PeerInterface(hmsPeer));
+
             notifyListeners("onPeerUpdate", eventData);
         }
         @Override public void onReconnected() {
@@ -95,14 +163,13 @@ public class HmsCapacitorPlugin extends Plugin {
         }
         @Override public void onRoleChangeRequest(@NonNull HMSRoleChangeRequest hmsRoleChangeRequest) {
             JSObject eventData = new JSObject();
-            Gson gson = new Gson();
-            eventData.put("peer", gson.toJson(hmsRoleChangeRequest.getRequestedBy()));
+            eventData.put("peer",  hmsRoleChangeRequest.getRequestedBy());
             notifyListeners("onRoleChange", eventData);
         }
         @Override public void onRoomUpdate(@NonNull HMSRoomUpdate hmsRoomUpdate, @NonNull HMSRoom hmsRoom) {}
         @Override public void onTrackUpdate(@NonNull HMSTrackUpdate hmsTrackUpdate, @NonNull HMSTrack hmsTrack, @NonNull HMSPeer hmsPeer) {
             JSObject eventData = new JSObject();
-            Gson gson = new Gson();
+
             if(hmsTrackUpdate == HMSTrackUpdate.TRACK_ADDED) {
                 eventData.put("hmsTrackUpdate", HMSTrackUpdate.TRACK_ADDED);
             } else if (hmsTrackUpdate == HMSTrackUpdate.TRACK_REMOVED) {
@@ -116,14 +183,17 @@ public class HmsCapacitorPlugin extends Plugin {
             } else if (hmsTrackUpdate == HMSTrackUpdate.TRACK_UNMUTED) {
                 eventData.put("hmsTrackUpdate", HMSTrackUpdate.TRACK_UNMUTED);
             }
-            eventData.put("hmsTrack", gson.toJson(hmsTrack));
-            eventData.put("hmsPeer", gson.toJson(hmsPeer));
+
+            eventData.put("hmsTrack",  hmsTrack);
+            eventData.put("hmsPeer", this.PeerInterface(hmsPeer));
+
             notifyListeners("onTrackUpdate", eventData);
         }
         @Override public void onError(@NonNull HMSException e) {
             JSObject eventData = new JSObject();
-            Gson gson = new Gson();
-            eventData.put("error", gson.toJson(e));
+
+            eventData.put("error",  this.ErrorInterface(e));
+
             notifyListeners("onError", eventData);
         }
 
@@ -169,6 +239,8 @@ public class HmsCapacitorPlugin extends Plugin {
         } else {
             requestPermissionForAlias("record_audio", call, "recordAudioPermsCallback");
         }
+
+        call.resolve();
     }
 
     @PluginMethod()
